@@ -1,0 +1,50 @@
+// LegalMind AI - Prisma Schema
+// Database: Supabase PostgreSQL
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  id                   String    @id @default(uuid())
+  email                String    @unique
+  password             String
+  name                 String?
+  plan                 String    @default("FREE")
+  documentsUsed        Int       @default(0)
+  documentsLimit       Int       @default(5)
+  stripeCustomerId     String?   @unique
+  stripeSubscriptionId String?   @unique
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+
+  documents Document[]
+
+  @@map("users")
+}
+
+model Document {
+  id              String   @id @default(uuid())
+  userId          String
+  fileName        String
+  s3Key           String
+  summary         String?  @db.Text
+  riskNotes       String?  @db.Text
+  overallRisk     String?
+  recommendations String?  @db.Text
+  status          String   @default("UPLOADED")
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("documents")
+}
+
