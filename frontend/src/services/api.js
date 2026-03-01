@@ -52,6 +52,7 @@ export const documentsAPI = {
   getAll: (page = 1, limit = 10) => api.get(`/documents?page=${page}&limit=${limit}`),
   getOne: (id) => api.get(`/documents/${id}`),
   delete: (id) => api.delete(`/documents/${id}`),
+  downloadUrl: (id) => api.get(`/documents/${id}/download`),
 };
 
 // Stripe API
