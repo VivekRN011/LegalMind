@@ -54,4 +54,13 @@ const deleteDocument = async (req, res, next) => {
   }
 };
 
-module.exports = { uploadDocument, getDocuments, getDocument, deleteDocument };
+const getDownloadUrl = async (req, res, next) => {
+  try {
+    const result = await documentService.getDownloadUrl(req.params.id, req.user.id);
+    res.json(result);
+  } catch (error) {
+    next(error);
+  }
+};
+
+module.exports = { uploadDocument, getDocuments, getDocument, deleteDocument, getDownloadUrl };
