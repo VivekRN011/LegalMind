@@ -5,7 +5,7 @@ import {
   Upload, FileText, AlertTriangle, CheckCircle, 
   Trash2, Eye, Loader2, Crown, LogOut, Scale,
   TrendingUp, Shield, Clock, Plus, Search,
-  MoreVertical, ExternalLink, X
+  MoreVertical, ExternalLink, X, Download, FileDown
 } from 'lucide-react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 
@@ -118,7 +118,25 @@ export default function Dashboard() {
 
   const handleLogout = () => {
     logout();
-    navigate('/login');
+    window.location.href = '/login';
+  };
+
+  const handleDownload = async (doc) => {
+    try {
+      const res = await documentsAPI.downloadUrl(doc.id);
+      window.open(res.data.url, '_blank');
+    } catch {
+      setError('Failed to download file');
+    }
+  };
+
+  const handleViewPdf = async (doc) => {
+    try {
+      const res = await documentsAPI.downloadUrl(doc.id);
+      window.open(res.data.url, '_blank');
+    } catch {
+      setError('Failed to open file');
+    }
   };
 
   const getRiskBadge = (risk) => {
@@ -287,17 +305,46 @@ export default function Dashboard() {
                 <div className="p-3 bg-white/20 rounded-xl">
                   <Crown className="text-white" size={24} />
                 </div>
+                {user?.plan === 'PRO' && (
+                  <span className="text-xs bg-white/20 px-2 py-1 rounded-full">Active</span>
+                )}
               </div>
               <p className="text-3xl font-bold">{user?.plan || 'FREE'}</p>
               <p className="text-indigo-100 text-sm mt-1">Current plan</p>
-              {user?.plan !== 'PRO' && (
-                <button
-                  onClick={handleUpgrade}
-                  className="mt-4 w-full py-2.5 bg-white text-indigo-600 text-sm font-semibold rounded-lg hover:bg-indigo-50 transition-colors"
-                >
-                  Upgrade to Pro
-                </button>
-              )}
+              
+              <div className="mt-4 space-y-2 text-sm">
+                {user?.plan === 'PRO' ? (
+                  <>
+                    <div className="flex items-center gap-2">
+                      <CheckCircle size={14} className="text-green-300" />
+                      <span>100 documents/month</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <CheckCircle size={14} className="text-green-300" />
+                      <span>Priority AI analysis</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <CheckCircle size={14} className="text-green-300" />
+                      <span>Advanced risk detection</span>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="flex items-center gap-2 text-indigo-200">
+                      <span>• 5 documents/month</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-indigo-200">
+                      <span>• Basic AI analysis</span>
+                    </div>
+                    <button
+                      onClick={handleUpgrade}
+                      className="mt-2 w-full py-2.5 bg-white text-indigo-600 text-sm font-semibold rounded-lg hover:bg-indigo-50 transition-colors"
+                    >
+                      Upgrade to Pro - $9.99/mo
+                    </button>
+                  </>
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -422,12 +469,26 @@ export default function Dashboard() {
                   </div>
                   
                   <div className="flex items-center gap-2 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
+                    <button
+                      onClick={() => handleViewPdf(doc)}
+                      className="p-2 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all"
+                      title="View PDF"
+                    >
+                      <ExternalLink size={18} />
+                    </button>
+                    <button
+                      onClick={() => handleDownload(doc)}
+                      className="p-2 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-lg transition-all"
+                      title="Download PDF"
+                    >
+                      <Download size={18} />
+                    </button>
                     <Link
                       to={`/document/${doc.id}`}
                       className="flex items-center gap-2 px-4 py-2 bg-indigo-50 text-indigo-600 rounded-lg hover:bg-indigo-100 transition-colors text-sm font-medium"
                     >
                       <Eye size={16} />
-                      View
+                      Analysis
                     </Link>
                     <button
                       onClick={() => handleDelete(doc.id)}
