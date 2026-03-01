@@ -206,6 +206,29 @@ class DocumentService {
     error.statusCode = 400;
     throw error;
   }
+
+  async getDownloadUrl(documentId, userId) {
+    const document = await prisma.document.findFirst({
+      where: {
+        id: documentId,
+        userId
+      }
+    });
+
+    if (!document) {
+      const error = new Error('Document not found');
+      error.statusCode = 404;
+      throw error;
+    }
+
+    // Generate signed URL for download
+    const url = await s3Service.getSignedUrl(document.s3Key);
+
+    return {
+      url,
+      fileName: document.fileName
+    };
+  }
 }
 
 module.exports = new DocumentService();
