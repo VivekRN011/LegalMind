@@ -25,10 +25,12 @@ const allowedOrigins = [
 app.use(cors({
   origin: (origin, callback) => {
     // Allow requests with no origin (like curl or Postman)
-    if (!origin || allowedOrigins.includes(origin)) {
+    // Allow configured origins and any Vercel deployment (prod + preview URLs)
+    const isVercel = origin && /\.vercel\.app$/.test(new URL(origin).hostname);
+    if (!origin || allowedOrigins.includes(origin) || isVercel) {
       callback(null, true);
     } else {
-      console.log('CORS blocked origin:', origin);
+      logger.warn('CORS blocked origin:', origin);
       callback(new Error('Not allowed by CORS'));
     }
   },
