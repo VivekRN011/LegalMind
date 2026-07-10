@@ -5,10 +5,26 @@ const logger = require('../config/logger');
 
 class StripeService {
   constructor() {
-    this.stripe = new Stripe(config.stripe.secretKey);
+    // Billing is optional. Only initialize Stripe when a key is configured
+    // so the core app can boot without payments wired up (e.g. demo/free tier).
+    this.stripe = config.stripe.secretKey
+      ? new Stripe(config.stripe.secretKey)
+      : null;
+    if (!this.stripe) {
+      logger.warn('STRIPE_SECRET_KEY not set - billing endpoints are disabled');
+    }
+  }
+
+  _ensureConfigured() {
+    if (!this.stripe) {
+      const error = new Error('Billing is not configured on this server');
+      error.statusCode = 503;
+      throw error;
+    }
   }
 
   async createCheckoutSession(userId, userEmail) {
+    this._ensureConfigured();
     // Get or create Stripe customer
     let user = await prisma.user.findUnique({ where: { id: userId } });
     
@@ -49,6 +65,7 @@ class StripeService {
   }
 
   async handleWebhook(payload, signature) {
+    this._ensureConfigured();
     let event;
 
     try {
@@ -158,7 +175,7 @@ class StripeService {
       }
     });
 
-    if (!user.stripeSubscriptionId) {
+    if (!this.stripe || !user.stripeSubscriptionId) {
       return { ...user, subscriptionStatus: null };
     }
 
@@ -174,6 +191,7 @@ class StripeService {
   }
 
   async cancelSubscription(userId) {
+    this._ensureConfigured();
     const user = await prisma.user.findUnique({ where: { id: userId } });
 
     if (!user.stripeSubscriptionId) {
